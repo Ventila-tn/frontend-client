@@ -2,287 +2,395 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CartService } from './core/services/cart.service';
+import { LogService } from './core/services/log.service';
 
 @Component({
   selector: 'cli-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="top-bar">
-      <div class="top-bar-content">
-        <span>🚚 Livraison rapide sur toute la Tunisie</span>
-        <span class="separator">|</span>
-        <span>✅ Garantie de fonctionnement</span>
-        <span class="separator">|</span>
-        <span>📞 Service client 7j/7</span>
-      </div>
-    </div>
-
-    <header class="main-nav">
-      <div class="nav-container">
-        <a routerLink="/" class="logo">
-          <img src="assets/images/logo.png" alt="Ventila.tn" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="logo-fallback" style="display: none;">
-            <span class="logo-icon">💨</span>
-            Ventila.tn
-          </div>
-        </a>
-        
-        <div class="nav-actions">
-          <a routerLink="/cart" class="cart-btn">
-            <svg class="cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 6H21L19 14H8M8 14L6 4H3M8 14L5 20H19M9 20C9 20.5523 8.55228 21 8 21C7.44772 21 7 20.5523 7 20C7 19.4477 7.44772 19 8 19C8.55228 19 9 19.4477 9 20ZM18 20C18 20.5523 18.4477 21 19 21C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19C18.4477 19 18 19.4477 18 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            @if (cart.count() > 0) {
-              <span class="cart-count">{{ cart.count() }}</span>
-            }
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <main class="page-content">
+    <!-- Main Content -->
+    <main class="main-content">
       <router-outlet></router-outlet>
     </main>
 
-    <footer class="site-footer">
-      <div class="footer-content">
-        <div class="footer-grid">
-          <div class="footer-brand">
-            <h3>Ventila.tn</h3>
-            <p>Votre expert en ventilation et confort thermique.</p>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer__inner">
+        <div class="footer__grid">
+          <div class="footer__column">
+            <div class="footer__logo">
+              <div class="logo-icon">💨</div>
+              <span class="logo-text">Ventila<span class="logo-highlight">.tn</span></span>
+            </div>
+            <p class="footer__description">
+              Votre expert en solutions de ventilation et confort thermique en Tunisie. Qualité et performance garanties.
+            </p>
           </div>
-          <div class="footer-contact">
-            <h4>Contact</h4>
-            <p>Email: contact&#64;ventila.tn</p>
-            <p>Tél: +216 71 000 000</p>
+
+          <div class="footer__column">
+            <h4 class="footer__heading">Navigation</h4>
+            <ul class="footer__links">
+              <li><a routerLink="/" class="footer__link">Accueil</a></li>
+              <li><a routerLink="/" class="footer__link">Tous les produits</a></li>
+              <li><a routerLink="/" class="footer__link">À propos</a></li>
+              <li><a routerLink="/" class="footer__link">Contact</a></li>
+            </ul>
+          </div>
+
+          <div class="footer__column">
+            <h4 class="footer__heading">Service client</h4>
+            <ul class="footer__links">
+              <li><a href="#" class="footer__link">FAQ</a></li>
+              <li><a href="#" class="footer__link">Livraison</a></li>
+              <li><a href="#" class="footer__link">Retours</a></li>
+              <li><a href="#" class="footer__link">Garantie</a></li>
+            </ul>
+          </div>
+
+          <div class="footer__column">
+            <h4 class="footer__heading">Contact</h4>
+            <ul class="footer__contact">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                +216 71 000 000
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                contact&#64;ventila.tn
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                Tunis, Tunisie
+              </li>
+            </ul>
           </div>
         </div>
-        <div class="footer-bottom">
-          <p>© 2026 Ventila.tn. Tous droits réservés.</p>
+
+        <div class="footer__bottom">
+          <p class="footer__copyright">&copy; 2026 Ventila.tn. Tous droits réservés.</p>
+          <div class="footer__payment">
+            <span>Paiements sécurisés</span>
+            <div class="payment-icons">
+              <span class="payment-icon">💳</span>
+              <span class="payment-icon">💰</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
   `,
   styles: [`
-    .top-bar {
-      background: var(--primary-dark);
-      color: white;
-      padding: 8px 0;
-      font-size: 0.8rem;
-      font-weight: 500;
+    /* Announcement Bar */
+    .announcement-bar {
+      background-color: var(--color-base-text);
+      color: var(--color-primary-contrast);
+      padding: 0.75rem 1rem;
       text-align: center;
-      position: fixed;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .announcement-bar__content p {
+      margin: 0;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
-      z-index: 101;
-    }
-    
-    .top-bar-content {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      padding: 0 24px;
-    }
-
-    .separator {
-      opacity: 0.3;
-    }
-
-    .main-nav {
-      position: fixed;
-      top: 36px;
-      left: 0;
-      right: 0;
-      height: 72px;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
       z-index: 100;
-      transition: all 0.3s ease;
+      background-color: var(--color-base-background-1);
+      border-bottom: 1px solid var(--color-base-border);
+      transition: box-shadow var(--transition-base);
     }
-    
-    .nav-container {
+
+    .header__inner {
       max-width: 1200px;
       margin: 0 auto;
-      height: 100%;
+      padding: 0 1.5rem;
+      height: 80px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      gap: 2rem;
     }
-    
-    .logo {
+
+    .header__logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-img {
-      height: 180px;
-      width: auto;
-      object-fit: contain;
-      margin: -60px 0; /* To compensate for the white space around the logo */
-      transform: scale(1.2);
-    }
-
-    .logo-fallback {
+      color: var(--color-base-text);
+      font-weight: 700;
       font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary-dark);
-      letter-spacing: -0.025em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      letter-spacing: -0.02em;
+      transition: transform var(--transition-base);
+    }
+
+    .header__logo:hover {
+      transform: scale(1.02);
     }
 
     .logo-icon {
-      font-size: 1.8rem;
-    }
-    
-    .nav-actions {
-      display: flex;
-      gap: 12px;
+      font-size: 1.75rem;
     }
 
-    .cart-btn {
-      position: relative;
+    .logo-text {
+      font-family: var(--font-heading);
+      font-weight: 700;
+    }
+
+    .logo-highlight {
+      color: var(--color-accent);
+    }
+
+    .header__navigation {
       display: flex;
-      align-items: center;
+      gap: 2rem;
+      flex: 1;
       justify-content: center;
+    }
+
+    .header__link {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+      text-decoration: none;
+      padding: 0.5rem 0;
+      position: relative;
+      transition: color var(--transition-base);
+    }
+
+    .header__link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--color-base-text);
+      transition: width var(--transition-base);
+    }
+
+    .header__link:hover {
+      color: var(--color-base-text);
+    }
+
+    .header__link:hover::after,
+    .header__link--active::after {
+      width: 100%;
+    }
+
+    .header__link--active {
+      color: var(--color-base-text);
+    }
+
+    .header__actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .header__action {
       width: 44px;
       height: 44px;
-      border-radius: 12px;
-      color: var(--text-main);
-      background: var(--bg);
-      transition: all 0.2s ease;
-      border: 1px solid var(--border);
-    }
-    
-    .cart-btn:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-      transform: translateY(-2px);
-    }
-    
-    .cart-count {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      background: var(--accent);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: 700;
-      min-width: 20px;
-      height: 20px;
-      padding: 0 4px;
-      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(46, 204, 113, 0.3);
+      border-radius: var(--radius-md);
+      color: var(--color-base-text);
+      transition: all var(--transition-base);
     }
-    
-    .page-content {
-      max-width: 1200px;
-      margin: 140px auto 80px;
-      padding: 0 24px;
+
+    .header__action:hover {
+      background-color: var(--color-gray-100);
+    }
+
+    .header__cart {
+      position: relative;
+    }
+
+    .header__cart-count {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background-color: var(--color-accent);
+      color: var(--color-accent-contrast);
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main Content */
+    .main-content {
       min-height: calc(100vh - 400px);
     }
-    
-    .site-footer {
-      background: white;
-      border-top: 1px solid var(--border);
-      padding: 64px 24px 32px;
+
+    /* Footer */
+    .footer {
+      background-color: var(--color-gray-900);
+      color: var(--color-gray-300);
+      margin-top: 4rem;
     }
-    
-    .footer-content {
+
+    .footer__inner {
       max-width: 1200px;
       margin: 0 auto;
+      padding: 4rem 1.5rem 2rem;
     }
 
-    .footer-grid {
+    .footer__grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 48px;
-      margin-bottom: 48px;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 3rem;
+      margin-bottom: 3rem;
     }
 
-    .footer-brand h3 {
+    .footer__logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
       font-size: 1.5rem;
-      margin-bottom: 16px;
-      color: var(--primary-dark);
+      color: var(--color-primary-contrast);
     }
 
-    .footer-brand p {
-      color: var(--text-muted);
-      max-width: 400px;
+    .footer__description {
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: var(--color-gray-400);
+      max-width: 340px;
     }
 
-    .footer-contact h4 {
-      margin-bottom: 16px;
-    }
-
-    .footer-contact p {
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    
-    .footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 32px;
-      text-align: center;
-    }
-    
-    .footer-bottom p {
-      color: var(--text-muted);
+    .footer__heading {
+      font-family: var(--font-body);
       font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-primary-contrast);
+      margin-bottom: 1.25rem;
+    }
+
+    .footer__links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .footer__link {
+      color: var(--color-gray-400);
+      font-size: 0.9375rem;
+      text-decoration: none;
+      transition: color var(--transition-base);
+    }
+
+    .footer__link:hover {
+      color: var(--color-primary-contrast);
+    }
+
+    .footer__contact {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .footer__contact li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9375rem;
+      color: var(--color-gray-400);
+    }
+
+    .footer__contact svg {
+      color: var(--color-accent);
+      flex-shrink: 0;
+    }
+
+    .footer__bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer__copyright {
+      font-size: 0.875rem;
+      color: var(--color-gray-500);
       margin: 0;
     }
-    
+
+    .footer__payment {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--color-gray-500);
+    }
+
+    .payment-icons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .payment-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .footer__grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+    }
+
     @media (max-width: 768px) {
-      .top-bar {
-        font-size: 0.65rem;
-        padding: 0;
-        height: 36px;
-        display: flex;
-        align-items: center;
-      }
-      
-      .top-bar-content {
-        gap: 16px;
-        padding: 0 16px;
-        justify-content: flex-start;
-        overflow-x: auto;
-        white-space: nowrap;
-        scrollbar-width: none;
+      .header__inner {
+        height: 70px;
+        padding: 0 1rem;
       }
 
-      .main-nav {
-        top: 36px;
-        height: 60px;
+      .header__navigation {
+        display: none;
       }
 
-      .logo-img {
-        height: 80px;
-        margin: -25px 0;
+      .header__logo {
+        font-size: 1.25rem;
       }
 
-      .page-content {
-        margin-top: 140px;
-        padding: 0 16px;
-      }
-
-      .footer-grid {
+      .footer__grid {
         grid-template-columns: 1fr;
-        gap: 32px;
+        gap: 2rem;
+      }
+
+      .footer__bottom {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
       }
     }
   `]
 })
 export class AppComponent {
-  constructor(public cart: CartService) { }
+  constructor(public cart: CartService, private logService: LogService) { }
 }

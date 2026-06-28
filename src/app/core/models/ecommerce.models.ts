@@ -48,3 +48,22 @@ export interface Order {
     email?: string;
     hasStockShortage: boolean;
 }
+
+export interface LogEntry {
+    id: number;
+    ipAddress: string;
+    timestamp: string;
+    logType: string;
+    message: string;
+    details?: string;
+    userAgent?: string;
+    pageUrl?: string;
+}
+
+export interface LogEntryRequest {
+    logType: string;
+    message: string;
+    details?: string;
+    userAgent?: string;
+    pageUrl?: string;
+}

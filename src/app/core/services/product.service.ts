@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Product } from '../models/ecommerce.models';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ProductService {
-    private apiUrl = 'http://localhost:8080/api/products';
+    private apiUrl = `${environment.apiUrl}/products`;
 
     private mockProducts: Product[] = [
         {
@@ -53,7 +54,8 @@ export class ProductService {
 
     getAll(): Observable<Product[]> {
         return this.http.get<Product[]>(this.apiUrl).pipe(
-            catchError(() => of(this.mockProducts))
+            catchError(() => of(this.mockProducts.filter(p => p.active))),
+            map(products => products.filter(p => p.active))
         );
     }
 

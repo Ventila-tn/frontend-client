@@ -1,13 +1,68 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>FrontendClient</title>
+  <title>VentilaTn – Ventilateurs & Climatisation</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="VentilaTn – Spécialiste ventilateurs et équipements de climatisation en Tunisie. Commandez en ligne, livraison rapide.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    .ventila-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      z-index: 9999;
+      gap: 32px;
+    }
+
+    .ventila-splash__logo {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #111111;
+    }
+
+    .ventila-splash__logo span {
+      color: #b08d6a;
+    }
+
+    .ventila-splash__bar {
+      width: 160px;
+      height: 3px;
+      background: #f0ede8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .ventila-splash__bar-inner {
+      height: 100%;
+      width: 40%;
+      background: #b08d6a;
+      border-radius: 99px;
+      animation: slide 1.2s ease-in-out infinite;
+    }
+
+    @keyframes slide {
+      0%   { transform: translateX(-100%); }
+      50%  { transform: translateX(250%); }
+      100% { transform: translateX(250%); }
+    }
+  </style>
 </head>
 <body>
-  <cli-root></cli-root>
+  <cli-root>
+    <div class="ventila-splash">
+      <div class="ventila-splash__logo">ventila<span>tn</span></div>
+      <div class="ventila-splash__bar">
+        <div class="ventila-splash__bar-inner"></div>
+      </div>
+    </div>
+  </cli-root>
 </body>
 </html>

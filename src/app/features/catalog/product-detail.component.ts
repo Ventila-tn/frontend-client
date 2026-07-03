@@ -83,7 +83,7 @@ import { Product } from '../../core/models/ecommerce.models';
                 <!-- Price -->
                 <div class="product__price-wrapper">
                   <span class="product__price">
-                    {{ p.sellingPriceTTC | currency:'TND':'symbol':'1.2-2' }}
+                    {{ p.sellingPriceTTC.toFixed(2) }} TND
                   </span>
                   <span class="product__price-tax">TTC</span>
                 </div>

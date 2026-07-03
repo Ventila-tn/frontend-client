@@ -126,10 +126,15 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                                             id="phone"
                                             formControlName="phone" 
                                             class="field__input"
-                                            placeholder="Numéro de téléphone"
+                                            placeholder="Numéro de téléphone (8 chiffres)"
                                         >
                                         @if (checkoutForm.get('phone')?.invalid && (checkoutForm.get('phone')?.dirty || checkoutForm.get('phone')?.touched)) {
-                                            <p class="field__error">Téléphone requis</p>
+                                            @if (checkoutForm.get('phone')?.hasError('required')) {
+                                                <p class="field__error">Téléphone requis</p>
+                                            }
+                                            @if (checkoutForm.get('phone')?.hasError('pattern')) {
+                                                <p class="field__error">Numéro de téléphone doit comporter exactement 8 chiffres</p>
+                                            }
                                         }
                                     </div>
                                 </div>
@@ -157,24 +162,6 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                                         class="field__input"
                                         placeholder="votre@email.com"
                                     >
-                                </div>
-
-                                <div class="form-actions">
-                                    <button 
-                                        type="submit" 
-                                        class="btn btn--primary btn--large btn--full"
-                                        [disabled]="checkoutForm.invalid || isSubmitting"
-                                    >
-                                        @if (isSubmitting) {
-                                            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
-                                                <path d="M12 2a10 10 0 0 1 10 10" opacity="1"></path>
-                                            </svg>
-                                            Envoi en cours...
-                                        } @else {
-                                            Confirmer la commande
-                                        }
-                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -214,7 +201,7 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                                                 </div>
                                             </div>
                                         </div>
-                                        <span class="summary-item__price">{{ item.product.sellingPriceTTC * item.quantity | currency:'TND':'symbol':'1.2-2' }}</span>
+                                        <span class="summary-item__price">{{ (item.product.sellingPriceTTC * item.quantity).toFixed(2) }} TND</span>
                                     </div>
                                 }
                             </div>
@@ -222,15 +209,15 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                             <div class="summary-totals">
                                 <div class="summary-total">
                                     <span class="summary-total__label">Sous-total</span>
-                                    <span class="summary-total__value">{{ cart.subtotal() | currency:'TND':'symbol':'1.2-2' }}</span>
+                                    <span class="summary-total__value">{{ cart.subtotal().toFixed(2) }} TND</span>
                                 </div>
                                 <div class="summary-total">
-                                    <span class="summary-total__label">TVA</span>
-                                    <span class="summary-total__value">{{ cart.tax() | currency:'TND':'symbol':'1.2-2' }}</span>
+                                    <span class="summary-total__label">Livraison</span>
+                                    <span class="summary-total__value">8.00 TND</span>
                                 </div>
                                 <div class="summary-total summary-total--final">
                                     <span class="summary-total__label">Total</span>
-                                    <span class="summary-total__value">{{ cart.total() | currency:'TND':'symbol':'1.2-2' }}</span>
+                                    <span class="summary-total__value">{{ (cart.subtotal() + 8).toFixed(2) }} TND</span>
                                 </div>
                             </div>
 
@@ -252,6 +239,30 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- CTA bouton — TOUJOURS EN DERNIER, après le formulaire -->
+                <div class="checkout-cta">
+                    @if (submitError) {
+                        <p class="checkout-cta__error">{{ submitError }}</p>
+                    }
+                    <button 
+                        type="button"
+                        (click)="onSubmit()"
+                        class="btn btn--primary btn--large btn--full"
+                        [disabled]="isLoading"
+                    >
+                        @if (isLoading) {
+                            <span class="spinner"></span>
+                            Traitement en cours...
+                        } @else {
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            Confirmer la commande
+                        }
+                    </button>
+                    <p class="checkout-cta__hint">En cliquant, vous acceptez nos conditions de vente.</p>
                 </div>
             </div>
         </div>
@@ -317,16 +328,17 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
         /* Checkout Layout */
         .checkout-layout {
             display: grid;
-            grid-template-columns: 1fr 420px;
+            grid-template-columns: 1.2fr 420px;
             gap: 3rem;
         }
 
         /* Form Section */
         .form-section {
             background: var(--color-base-background-1);
-            padding: 2rem;
-            border-radius: var(--radius-lg);
+            padding: 2.25rem;
+            border-radius: 20px;
             border: 1px solid var(--color-base-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
 
         .form-section__title {
@@ -367,7 +379,7 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
             padding: 0.875rem 1rem;
             font-size: 1rem;
             border: 1px solid var(--color-base-border);
-            border-radius: var(--radius-md);
+            border-radius: 12px;
             background: var(--color-base-background-1);
             color: var(--color-base-text);
             transition: all var(--transition-base);
@@ -377,7 +389,19 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
         .field__input:focus {
             outline: none;
             border-color: var(--color-base-text);
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+        }
+
+        select.field__input {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+            cursor: pointer;
         }
 
         .field__input::placeholder {
@@ -461,9 +485,10 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
 
         .summary-card {
             background: var(--color-base-background-1);
-            padding: 1.75rem;
-            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border-radius: 20px;
             border: 1px solid var(--color-base-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
 
         .summary-card__title {
@@ -624,53 +649,195 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
             flex-shrink: 0;
         }
 
-        /* Responsive */
+        /* ==============================
+           RESPONSIVE — Mobile First
+           ============================== */
+
+        /* Tablet landscape (≤1024px) */
         @media (max-width: 1024px) {
             .checkout-layout {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
-            
             .checkout-summary {
                 position: static;
-                order: -1;
+                order: -1; /* summary above the form */
             }
         }
 
+        /* Mobile (≤768px) */
         @media (max-width: 768px) {
             .checkout-page {
                 padding: 1rem 0 3rem;
             }
 
             .breadcrumb {
-                margin-bottom: 1.5rem;
+                margin-bottom: 1.25rem;
             }
 
             .checkout-page__header {
-                margin-bottom: 1.75rem;
+                margin-bottom: 1.5rem;
             }
-            
+
             .checkout-page__title {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
             }
-            
+
+            /* All form rows collapse to single column */
             .form-row {
                 grid-template-columns: 1fr;
+                gap: 0.875rem;
             }
 
             .form-section {
-                padding: 1.5rem;
+                padding: 1.25rem;
+                border-radius: 16px;
             }
-            
+
+            .form-section__title {
+                font-size: 1.1rem;
+                margin-bottom: 1.25rem;
+            }
+
+            /* Larger touch targets for inputs */
+            .field__input {
+                padding: 0.9375rem 1rem;
+                font-size: 1rem; /* prevents iOS auto-zoom */
+                border-radius: 10px;
+            }
+
+            .field__label {
+                font-size: 0.875rem;
+            }
+
+            /* Summary card compact */
             .summary-card {
-                padding: 1.5rem;
+                padding: 1.25rem;
+                border-radius: 16px;
             }
+
+            .summary-card__title {
+                font-size: 1.1rem;
+                margin-bottom: 1.25rem;
+            }
+
+            /* Trust badges: side by side on mobile */
+            .trust-badges {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.625rem;
+                padding-top: 1rem;
+                margin-top: 1rem;
+            }
+
+            .trust-badge {
+                font-size: 0.8125rem;
+            }
+
+            /* Submit button: full-width, tall for thumb tap */
+            .btn--large {
+                padding: 1rem 1.5rem;
+                min-height: 52px;
+                font-size: 1rem;
+            }
+
+            /* Quantity selector in cart */
+            .quantity-selector {
+                border-radius: 10px;
+            }
+
+            .quantity-selector__btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            /* Checkout layout gap */
+            .checkout-layout {
+                gap: 1rem;
+            }
+
+            /* Summary totals slightly smaller */
+            .summary-total {
+                font-size: 0.875rem;
+            }
+
+            .summary-total--final {
+                font-size: 1.125rem;
+            }
+        }
+
+        /* Small phones (≤480px) */
+        @media (max-width: 480px) {
+            .checkout-page__title {
+                font-size: 1.25rem;
+            }
+
+            .form-section {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .summary-card {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .btn--large {
+                font-size: 0.9375rem;
+            }
+
+            .quantity-selector__btn {
+                width: 32px;
+                height: 32px;
+            }
+
+            .quantity-selector__value {
+                min-width: 28px;
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Very small phones (≤380px) */
+        @media (max-width: 380px) {
+            .checkout-page__title {
+                font-size: 1.125rem;
+            }
+
+            .form-section__title {
+                font-size: 1rem;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .checkout-cta__error {
+            color: #c62828;
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
+            text-align: center;
         }
     `]
 })
 export class CheckoutComponent implements OnInit {
     checkoutForm!: FormGroup;
-    isSubmitting = false;
-    
+    isLoading = false;
+    submitError: string | null = null;
+
     // Liste des gouvernorats tunisiens avec leurs villes
     gouvernoratsVilles: { [key: string]: string[] } = {
         'Ariana': ['Ariana', 'La Soukra', 'Raoued', 'Ettadhamen', 'Mnihla'],
@@ -698,7 +865,7 @@ export class CheckoutComponent implements OnInit {
         'Tunis': ['Tunis', 'Ariana', 'Ben Arous', 'La Marsa', 'Carthage'],
         'Zaghouan': ['Zaghouan', 'Nabeul', 'Mateur', 'Bir Mchergua', 'El Fahs']
     };
-    
+
     // Villes du gouvernorat sélectionné
     villes: string[] = [];
 
@@ -708,12 +875,12 @@ export class CheckoutComponent implements OnInit {
     }
 
     constructor(
-    private fb: FormBuilder,
-    public cart: CartService,
-    private orderService: OrderService,
-    private router: Router,
-    private logService: LogService
-  ) { }
+        private fb: FormBuilder,
+        public cart: CartService,
+        private orderService: OrderService,
+        private router: Router,
+        private logService: LogService
+    ) { }
 
     ngOnInit() {
         this.checkoutForm = this.fb.group({
@@ -723,7 +890,7 @@ export class CheckoutComponent implements OnInit {
             ville: ['', Validators.required],
             codePostal: ['', Validators.required],
             address: ['', Validators.required],
-            phone: ['', Validators.required],
+            phone: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
             email: ['']
         });
 
@@ -745,12 +912,16 @@ export class CheckoutComponent implements OnInit {
 
     onSubmit() {
         if (this.checkoutForm.invalid) {
-            // Mark all fields as touched to show errors
             this.checkoutForm.markAllAsTouched();
             return;
         }
 
-        this.isSubmitting = true;
+        this.isLoading = true;
+        this.submitError = null;
+
+        const formVal = this.checkoutForm.value;
+        const fullAddress = [formVal.address, formVal.ville, formVal.gouvernorat, formVal.codePostal]
+            .filter(Boolean).join(', ');
 
         const items: { [key: number]: number } = {};
         for (const item of this.cart.items()) {
@@ -758,25 +929,25 @@ export class CheckoutComponent implements OnInit {
         }
 
         const request: CheckoutRequest = {
-            ...this.checkoutForm.value,
+            firstName: formVal.firstName,
+            lastName: formVal.lastName,
+            address: fullAddress,
+            phone: formVal.phone,
+            email: formVal.email || undefined,
             items
         };
-        
-        const orderDetails = {
-            items: this.cart.items().map(i => ({ productId: i.product.id, name: i.product.name, quantity: i.quantity })),
-            total: this.cart.total()
-        };
-        this.logService.log('CHECKOUT', 'Order placed successfully', orderDetails);
 
         this.orderService.checkout(request).subscribe({
-            next: () => {
+            next: (order) => {
+                this.logService.log('CHECKOUT', 'Order placed successfully', { orderId: order.id });
                 this.cart.clear();
-                this.router.navigate(['/'], { queryParams: { orderSuccess: 'true' } });
+                this.router.navigate(['/order-success'], { state: { order } });
             },
             error: (err) => {
+                this.isLoading = false;
+                this.submitError = 'Une erreur est survenue. Veuillez réessayer.';
                 console.error('Checkout error:', err);
                 this.logService.log('ERROR', `Checkout failed: ${err.message}`, err);
-                this.isSubmitting = false;
             }
         });
     }

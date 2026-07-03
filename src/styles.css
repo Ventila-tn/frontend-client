@@ -66,7 +66,7 @@
 }
 
 /* Reset & Base */
-* {
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -75,6 +75,9 @@
 html {
     font-size: 16px;
     scroll-behavior: smooth;
+    /* Prevent font inflation on landscape mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -85,6 +88,8 @@ body {
     background-color: var(--color-base-background-1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow / scroll on mobile */
+    overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -122,10 +127,20 @@ button {
     background: none;
 }
 
-img {
+img, video, iframe {
     max-width: 100%;
     height: auto;
     display: block;
+}
+
+/* Make all inputs/selects/textareas not exceed container */
+input, select, textarea, button {
+    max-width: 100%;
+}
+
+/* Prevent tap highlight on buttons (iOS) */
+button {
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Button Components */

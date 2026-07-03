@@ -37,10 +37,12 @@ export interface OrderItem {
 
 export interface Order {
     id: number;
+    reference: string;
     orderDate: string;
     status: string;
     items: OrderItem[];
     totalAmount: number;
+    deliveryFee: number;
     firstName: string;
     lastName: string;
     address: string;

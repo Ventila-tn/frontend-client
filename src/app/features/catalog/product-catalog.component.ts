@@ -1,20 +1,31 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, signal, effect, computed } from '@angular/core';
 import { CommonModule, CurrencyPipe, KeyValuePipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
+import { OrderService } from '../../core/services/order.service';
 import { LogService } from '../../core/services/log.service';
-import { Product } from '../../core/models/ecommerce.models';
+import { SettingService } from '../../core/services/setting.service';
+import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
 
 @Component({
   selector: 'cli-product-catalog',
   standalone: true,
-  imports: [CommonModule, RouterModule, CurrencyPipe, KeyValuePipe],
+  imports: [CommonModule, RouterModule, CurrencyPipe, KeyValuePipe, ReactiveFormsModule],
   template: `
-    <div class="collection">
+    @if (pageLoading()) {
+      <div class="ventila-splash">
+        <div class="ventila-splash__logo">ventila<span>tn</span></div>
+        <div class="ventila-splash__bar">
+          <div class="ventila-splash__bar-inner"></div>
+        </div>
+      </div>
+    }
+    <div class="collection" [class.hidden]="pageLoading()">
       <div class="collection__header">
         <div class="collection__hero">
-                <video autoplay muted loop playsinline class="collection__hero-video">
+                <video #heroVideo autoplay muted loop playsinline class="collection__hero-video">
                     <source src="assets/videos/ventila.mp4" type="video/mp4">
                 </video>
                 <div class="collection__hero-overlay"></div>
@@ -80,12 +91,12 @@ import { Product } from '../../core/models/ecommerce.models';
                     <h1 class="product__title">{{ products()[0].name }}</h1>
 
                     <!-- Price -->
-                    <div class="product__price-wrapper">
-                      <span class="product__price">
-                        {{ products()[0].sellingPriceTTC | currency:'TND':'symbol':'1.2-2' }}
-                      </span>
-                      <span class="product__price-tax">TTC</span>
-                    </div>
+            <div class="product__price-wrapper">
+              <span class="product__price">
+                {{ products()[0].sellingPriceTTC.toFixed(2) }} TND
+              </span>
+              <span class="product__price-tax">TTC</span>
+            </div>
 
                     <!-- Description -->
                     @if (products()[0].description) {
@@ -97,46 +108,6 @@ import { Product } from '../../core/models/ecommerce.models';
                     <!-- Divider -->
                     <div class="product__divider"></div>
 
-                    <!-- Quantity & Add to Cart Row -->
-                    <div class="product__action-row">
-                      <div class="product__quantity">
-                        <label class="product__quantity-label">Quantité</label>
-                        <div class="quantity-selector">
-                          <button 
-                            class="quantity-selector__btn quantity-selector__btn--decrease"
-                            (click)="decreaseQuantity()"
-                            [disabled]="quantity() <= 1"
-                            type="button"
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                              <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"></line>
-                            </svg>
-                          </button>
-                          <span class="quantity-selector__value">{{ quantity() }}</span>
-                          <button 
-                            class="quantity-selector__btn quantity-selector__btn--increase"
-                            (click)="increaseQuantity()"
-                            type="button"
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                              <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round"></line>
-                              <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"></line>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <button class="btn btn--primary btn--add-to-cart" (click)="addToCart(products()[0])">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M6 6h15l-1.5 9h-12l-1.5-9z"></path>
-                          <path d="M6 6l-1-4H2"></path>
-                          <circle cx="10" cy="19" r="1"></circle>
-                          <circle cx="17" cy="19" r="1"></circle>
-                        </svg>
-                        Ajouter au panier
-                      </button>
-                    </div>
-
                     <!-- Characteristics -->
                     @if (hasCharacteristics(products()[0])) {
                       <div class="product__section">
@@ -144,7 +115,7 @@ import { Product } from '../../core/models/ecommerce.models';
                           <h3 class="product__section-title">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <circle cx="12" cy="12" r="3"></circle>
-                              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                             </svg>
                             Caractéristiques
                           </h3>
@@ -159,10 +130,223 @@ import { Product } from '../../core/models/ecommerce.models';
                         </div>
                       </div>
                     }
+
                   </div>
                 </div>
-              </div>
+
+                <!-- Wide Divider -->
+                <div class="product__divider product__divider--wide"></div>
+
+                <!-- Checkout Layout -->
+                <div class="checkout-layout">
+                      <!-- Checkout Form -->
+                      <div class="checkout-form">
+                        <div class="form-section">
+                          <h2 class="form-section__title">Informations de livraison</h2>
+                          <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()" class="form">
+                            <div class="form-row">
+                              <div class="field">
+                                <label class="field__label" for="firstName">Prénom *</label>
+                                <input 
+                                  type="text" 
+                                  id="firstName"
+                                  formControlName="firstName" 
+                                  class="field__input"
+                                  placeholder="Votre prénom"
+                                >
+                                @if (checkoutForm.get('firstName')?.invalid && (checkoutForm.get('firstName')?.dirty || checkoutForm.get('firstName')?.touched)) {
+                                  <p class="field__error">Prénom requis</p>
+                                }
+                              </div>
+                              <div class="field">
+                                <label class="field__label" for="lastName">Nom *</label>
+                                <input 
+                                  type="text" 
+                                  id="lastName"
+                                  formControlName="lastName" 
+                                  class="field__input"
+                                  placeholder="Votre nom"
+                                >
+                                @if (checkoutForm.get('lastName')?.invalid && (checkoutForm.get('lastName')?.dirty || checkoutForm.get('lastName')?.touched)) {
+                                  <p class="field__error">Nom requis</p>
+                                }
+                              </div>
+                            </div>
+
+                            <div class="form-row">
+                              <div class="field">
+                                <label class="field__label" for="gouvernorat">Gouvernorat *</label>
+                                <select 
+                                  id="gouvernorat"
+                                  formControlName="gouvernorat" 
+                                  class="field__input"
+                                >
+                                  <option value="">Sélectionnez un gouvernorat</option>
+                                  @for (gouv of gouvernorats; track gouv) {
+                                    <option [value]="gouv">{{ gouv }}</option>
+                                  }
+                                </select>
+                                @if (checkoutForm.get('gouvernorat')?.invalid && (checkoutForm.get('gouvernorat')?.dirty || checkoutForm.get('gouvernorat')?.touched)) {
+                                  <p class="field__error">Gouvernorat requis</p>
+                                }
+                              </div>
+                              <div class="field">
+                                <label class="field__label" for="ville">Ville *</label>
+                                <select 
+                                  id="ville"
+                                  formControlName="ville" 
+                                  class="field__input"
+                                >
+                                  <option value="">Sélectionnez une ville</option>
+                                  @for (ville of villes; track ville) {
+                                    <option [value]="ville">{{ ville }}</option>
+                                  }
+                                </select>
+                                @if (checkoutForm.get('ville')?.invalid && (checkoutForm.get('ville')?.dirty || checkoutForm.get('ville')?.touched)) {
+                                  <p class="field__error">Ville requise</p>
+                                }
+                              </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label class="field__label" for="codePostal">Code Postal *</label>
+                                    <input 
+                                        type="text" 
+                                        id="codePostal"
+                                        formControlName="codePostal" 
+                                        class="field__input"
+                                        placeholder="Code postal"
+                                    >
+                                    @if (checkoutForm.get('codePostal')?.invalid && (checkoutForm.get('codePostal')?.dirty || checkoutForm.get('codePostal')?.touched)) {
+                                        <p class="field__error">Code postal requis</p>
+                                    }
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="phone">Téléphone *</label>
+                                    <input 
+                                        type="tel" 
+                                        id="phone"
+                                        formControlName="phone" 
+                                        class="field__input"
+                                        placeholder="Numéro de téléphone (8 chiffres)"
+                                    >
+                                    @if (checkoutForm.get('phone')?.invalid && (checkoutForm.get('phone')?.dirty || checkoutForm.get('phone')?.touched)) {
+                                        @if (checkoutForm.get('phone')?.hasError('required')) {
+                                            <p class="field__error">Téléphone requis</p>
+                                        }
+                                        @if (checkoutForm.get('phone')?.hasError('pattern')) {
+                                            <p class="field__error">Numéro de téléphone doit comporter exactement 8 chiffres</p>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="field">
+                              <label class="field__label" for="address">Adresse *</label>
+                              <textarea 
+                                id="address"
+                                formControlName="address" 
+                                rows="3" 
+                                class="field__input field__input--textarea"
+                                placeholder="Votre adresse complète"
+                              ></textarea>
+                              @if (checkoutForm.get('address')?.invalid && (checkoutForm.get('address')?.dirty || checkoutForm.get('address')?.touched)) {
+                                <p class="field__error">Adresse requise</p>
+                              }
+                            </div>
+
+                            <div class="field">
+                              <label class="field__label" for="email">Email (optionnel)</label>
+                              <input 
+                                type="email" 
+                                id="email"
+                                formControlName="email" 
+                                class="field__input"
+                                placeholder="votre@email.com"
+                              >
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+
+                      <!-- Order Summary -->
+                      <div class="checkout-summary">
+                        <div class="summary-card">                          
+                          <div class="summary-items">
+                            <div class="summary-item">
+                              <div class="summary-item__info">                                <div class="product__quantity">
+                                  <label class="product__quantity-label">Quantité</label>
+                                  <div class="quantity-selector">
+                                    <button 
+                                      class="quantity-selector__btn quantity-selector__btn--decrease"
+                                      (click)="decreaseQuantity()"
+                                      [disabled]="quantity() <= 1"
+                                      type="button"
+                                    >
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"></line>
+                                      </svg>
+                                    </button>
+                                    <span class="quantity-selector__value">{{ quantity() }}</span>
+                                    <button 
+                                      class="quantity-selector__btn quantity-selector__btn--increase"
+                                      (click)="increaseQuantity()"
+                                      type="button"
+                                    >
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"></line>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="summary-totals">
+            <div class="summary-total">
+              <span class="summary-total__label">Sous-total</span>
+              <span class="summary-total__value">{{ subtotal.toFixed(2) }} TND</span>
             </div>
+            <div class="summary-total">
+              <span class="summary-total__label">Livraison</span>
+              <span class="summary-total__value">{{ deliveryFee.toFixed(2) }} TND</span>
+            </div>
+            <div class="summary-total summary-total--final">
+              <span class="summary-total__label">Total</span>
+              <span class="summary-total__value">{{ total.toFixed(2) }} TND</span>
+            </div>
+          </div>
+
+                          <!-- Trust Badges -->
+                          
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- ✅ CTA bouton — toujours EN DERNIER, après la summary et le formulaire -->
+                    <div class="checkout-cta">
+                        @if (submitError) {
+                            <p class="checkout-cta__error">{{ submitError }}</p>
+                        }
+                        <button 
+                            type="button"
+                            (click)="onSubmit()"
+                            class="btn btn--primary btn--large btn--full"
+                            [disabled]="isLoading"
+                        >
+                            @if (isLoading) {
+                                <span class="spinner"></span>
+                                Traitement en cours...
+                            } @else {
+                                Valider ma commande
+                            }
+                        </button>
+                    </div>
+                  </div>
+                </div>
 
             <!-- Lightbox -->
             @if (isLightboxOpen) {
@@ -243,7 +427,7 @@ import { Product } from '../../core/models/ecommerce.models';
                       <div class="product-card__vendor">Ventila.tn</div>
                       <h3 class="product-card__title">{{ product.name }}</h3>
                       <div class="product-card__price">
-                        <span class="price">{{ product.sellingPriceTTC | currency:'TND':'symbol':'1.2-2' }}</span>
+                        <span class="price">{{ product.sellingPriceTTC.toFixed(2) }} TND</span>
                       </div>
                     </div>
                   </a>
@@ -256,6 +440,46 @@ import { Product } from '../../core/models/ecommerce.models';
     </div>
   `,
   styles: [`
+    /* Splash screen */
+    .ventila-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      z-index: 9999;
+      gap: 28px;
+    }
+    .ventila-splash__logo {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #111111;
+    }
+    .ventila-splash__logo span { color: #b08d6a; }
+    .ventila-splash__bar {
+      width: 160px;
+      height: 3px;
+      background: #f0ede8;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .ventila-splash__bar-inner {
+      height: 100%;
+      width: 40%;
+      background: #b08d6a;
+      border-radius: 99px;
+      animation: splash-slide 1.2s ease-in-out infinite;
+    }
+    @keyframes splash-slide {
+      0%   { transform: translateX(-100%); }
+      50%  { transform: translateX(250%); }
+      100% { transform: translateX(250%); }
+    }
+    .hidden { visibility: hidden; }
+
     /* Collection Header */
         .collection__header {
             padding: 0;
@@ -765,14 +989,21 @@ import { Product } from '../../core/models/ecommerce.models';
       box-shadow: 0 4px 12px rgba(17, 24, 39, 0.15);
     }
 
-    .btn--primary:hover {
+    .btn--primary:hover:not(:disabled) {
       background: #374151;
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(17, 24, 39, 0.25);
     }
 
-    .btn--primary:active {
+    .btn--primary:active:not(:disabled) {
       transform: translateY(0);
+    }
+
+    .btn--primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
     }
 
     .product__section {
@@ -976,36 +1207,303 @@ import { Product } from '../../core/models/ecommerce.models';
       to { opacity: 1; }
     }
 
-    /* Responsive */
+    /* Checkout Layout */
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 420px;
+      gap: 3rem;
+      margin-top: 1rem;
+    }
+
+    .product__divider--wide {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e5e7eb 10%, #e5e7eb 90%, transparent);
+      margin: 3.5rem 0;
+    }
+
+    /* Form Section */
+    .form-section {
+      background: #ffffff;
+      padding: 2.25rem;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .form-section__title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 1.75rem;
+    }
+
+    /* Form */
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Field */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .field__label {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .field__input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #111827;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+
+    .field__input:focus {
+      outline: none;
+      border-color: #111827;
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08);
+    }
+
+    select.field__input {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23111827' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.25rem;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+
+    .field__input::placeholder {
+      color: #9ca3af;
+    }
+
+    .field__input--textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .field__error {
+      font-size: 0.8125rem;
+      color: #dc2626;
+      margin: 0;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      margin-top: 1.5rem;
+    }
+
+    .btn--large {
+      padding: 1.125rem 2.5rem;
+      font-size: 1.0625rem;
+    }
+
+    .btn--full {
+      width: 100%;
+    }
+
+    /* Spinner */
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Checkout Summary */
+    .checkout-summary {
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+    }
+
+    .summary-card {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .summary-card__title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem;
+      color: #111827;
+    }
+
+    .summary-items {
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .summary-item__info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .summary-item__name {
+      color: #111827;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      line-height: 1.4;
+    }
+
+    .summary-item__price {
+      color: #111827;
+      font-weight: 600;
+      font-size: 0.9375rem;
+    }
+
+    .summary-totals {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      color: #6b7280;
+      font-size: 0.9375rem;
+    }
+
+    .summary-total__label {
+      font-weight: 500;
+    }
+
+    .summary-total__value {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .summary-total--final {
+      color: #111827;
+      font-size: 1.25rem;
+      font-weight: 700;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 0.25rem;
+    }
+
+    .summary-total--final .summary-total__value {
+      font-weight: 700;
+    }
+
+    /* Trust Badges */
+    .trust-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 1.5rem;
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .trust-badge svg {
+      color: #22c55e;
+      flex-shrink: 0;
+    }
+
+    /* ==============================
+       RESPONSIVE — Mobile First
+       ============================== */
+
+    /* Tablet landscape (≤1200px) */
     @media (max-width: 1200px) {
       .product-grid {
         grid-template-columns: repeat(3, 1fr);
       }
-    }
-
-    @media (max-width: 1024px) {
-      .product__grid {
-        gap: 2.5rem;
+      /* Collapse checkout to full-width column */
+      .checkout-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .checkout-summary {
+        position: static;
+        order: -1; /* summary card appears above the form */
       }
     }
 
+    /* Tablet portrait (≤1024px) */
+    @media (max-width: 1024px) {
+      .product__grid {
+        gap: 2rem;
+      }
+      .collection__content {
+        padding: 2rem 0;
+      }
+    }
+
+    /* Small tablet / large phone (≤900px) */
     @media (max-width: 900px) {
       .product-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
+        gap: 1.25rem;
       }
 
       .collection__title {
-        font-size: 2.25rem;
+        font-size: 2rem;
       }
 
       .collection__hero {
-        height: 400px;
+        height: 380px;
       }
 
+      /* Stack product image + info vertically */
       .product__grid {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 1.75rem;
       }
 
       .product__media {
@@ -1015,54 +1513,81 @@ import { Product } from '../../core/models/ecommerce.models';
       .product__features {
         grid-template-columns: 1fr;
       }
+
+      /* Checkout layout already 1-col from 1200px,
+         but make summary non-sticky on tablet too */
+      .checkout-summary {
+        position: static;
+        order: -1;
+      }
     }
 
-    @media (max-width: 600px) {
+    /* Mobile (≤768px) */
+    @media (max-width: 768px) {
+      /* Container padding tighter on mobile */
+      .container {
+        padding: 0 1rem;
+      }
+
+      /* Hero */
       .collection__hero {
-        height: 300px;
+        height: 320px;
       }
 
-      .collection__title {
-        font-size: 1.875rem;
-      }
-
-      .collection__description {
-        font-size: 1rem;
-      }
-
-      .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-
-      .product-card__actions {
-        display: none;
-      }
-
+      /* Product page top padding */
       .product-page {
-        padding: 0 0 3rem;
+        padding: 0 0 2.5rem;
       }
 
+      /* Title + price scale down */
       .product__title {
-        font-size: 1.75rem;
+        font-size: 1.625rem;
+        margin-bottom: 0.75rem;
       }
 
       .product__price {
-        font-size: 1.75rem;
+        font-size: 1.625rem;
       }
 
+      /* Image area */
       .product__media-main {
-        padding: 1.5rem;
+        padding: 1.25rem;
+        border-radius: 16px;
+      }
+
+      .product__media-thumbnails {
+        gap: 0.5rem;
+        margin-top: 0.75rem;
       }
 
       .product__media-thumbnail {
-        width: 64px;
-        height: 64px;
+        width: 58px;
+        height: 58px;
+        border-radius: 10px;
+        padding: 0.4rem;
       }
 
+      /* Specs table readable on narrow screen */
+      .product-specs {
+        padding: 0.875rem 1rem;
+      }
+
+      .product-specs__row {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+        padding: 0.625rem 0;
+      }
+
+      .product-specs__value {
+        text-align: left;
+        font-weight: 700;
+      }
+
+      /* Action row — stack qty + button */
       .product__action-row {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
       }
 
       .product__quantity {
@@ -1072,27 +1597,272 @@ import { Product } from '../../core/models/ecommerce.models';
       .quantity-selector {
         width: 100%;
         justify-content: space-between;
+        border-radius: 12px;
+      }
+
+      .quantity-selector__btn {
+        width: 52px;
+        height: 52px;
       }
 
       .quantity-selector__value {
         flex: 1;
+        font-size: 1.125rem;
       }
 
+      /* Add-to-cart / submit button full width + taller for tap */
       .btn--primary {
         width: 100%;
+        min-height: 52px;
+        font-size: 1rem;
       }
+
+      /* Checkout form: all rows become single column */
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.875rem;
+      }
+
+      .form-section {
+        padding: 1.25rem;
+        border-radius: 16px;
+      }
+
+      .form-section__title {
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+      }
+
+      /* Inputs larger touch targets */
+      .field__input {
+        padding: 0.9375rem 1rem;
+        font-size: 1rem; /* prevent iOS zoom */
+        border-radius: 10px;
+      }
+
+      .field__label {
+        font-size: 0.875rem;
+      }
+
+      /* Summary card */
+      .summary-card {
+        padding: 1.25rem;
+        border-radius: 16px;
+      }
+
+      .summary-card__title {
+        font-size: 1.1rem;
+      }
+
+      /* Trust badges: horizontal on mobile */
+      .trust-badges {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+        padding-top: 1rem;
+        margin-top: 1rem;
+      }
+
+      .trust-badge {
+        font-size: 0.8125rem;
+      }
+
+      /* Submit button in summary card */
+      .form-actions {
+        margin-top: 1rem;
+      }
+
+      /* Product card: hide overlay button on touch */
+      .product-card__actions {
+        display: none;
+      }
+
+      /* Divider wide: less vertical space */
+      .product__divider--wide {
+        margin: 2rem 0;
+      }
+
+      /* Checkout layout gap */
+      .checkout-layout {
+        gap: 1rem;
+      }
+    }
+
+    /* Checkout CTA button area */
+    .checkout-cta {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .checkout-cta .btn--large {
+      width: 100%;
+      max-width: 500px;
+      padding: 1.25rem 3rem;
+      font-size: 1.125rem;
+    }
+
+    /* Small phones (≤480px) */
+    @media (max-width: 480px) {
+      .collection__hero {
+        height: 240px;
+      }
+
+      .collection__title {
+        font-size: 1.625rem;
+      }
+
+      /* 2-col grid compressed for tiny phones */
+      .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .product-card__title {
+        font-size: 0.875rem;
+      }
+
+      .product-card__price .price {
+        font-size: 1rem;
+      }
+
+      .product__title {
+        font-size: 1.375rem;
+      }
+
+      .product__price {
+        font-size: 1.5rem;
+      }
+
+      /* Full bleed image on tiny screens */
+      .product__media-main {
+        border-radius: 12px;
+        padding: 1rem;
+      }
+
+      .product__media-thumbnail {
+        width: 52px;
+        height: 52px;
+      }
+
+      /* Form: comfortable on tiny screen */
+      .form-section {
+        padding: 1rem;
+        border-radius: 12px;
+      }
+
+      .summary-card {
+        padding: 1rem;
+        border-radius: 12px;
+      }
+
+      /* Bigger tap area for quantity buttons */
+      .quantity-selector__btn {
+        width: 48px;
+        height: 48px;
+      }
+
+      /* Collection content less padding */
+      .collection__content {
+        padding: 1.5rem 0;
+      }
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .checkout-cta__error {
+      color: #c62828;
+      background: #ffebee;
+      border: 1px solid #ef9a9a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
     }
   `]
 })
-export class ProductCatalogComponent implements OnInit {
+export class ProductCatalogComponent implements OnInit, AfterViewInit {
   products = signal<Product[]>([]);
   selectedImage = '';
   quantity = signal(1);
   isLightboxOpen = false;
   lightboxImage = '';
   currentImageIndex = 0;
+  checkoutForm!: FormGroup;
 
-  constructor(private productService: ProductService, private cartService: CartService, private router: Router, private logService: LogService) {
+  // Liste des gouvernorats tunisiens avec leurs villes
+  gouvernoratsVilles: { [key: string]: string[] } = {
+    'Ariana': ['Ariana', 'La Soukra', 'Raoued', 'Ettadhamen', 'Mnihla'],
+    'Béja': ['Béja', 'Medjez El Bab', 'Téboursouk', 'Testour', 'Amdoun'],
+    'Ben Arous': ['Ben Arous', 'Hammam Chott', 'Fouchana', 'Mornag', 'Rades'],
+    'Bizerte': ['Bizerte', 'Mateur', 'Menzel Bourguiba', 'Jendouba', 'El Alia'],
+    'Gabès': ['Gabès', 'Mareth', 'Matmata', 'El Hamma', 'Oudhref'],
+    'Gafsa': ['Gafsa', 'Tozeur', 'Metlaoui', 'Sidi Bouzid', 'Ksar'],
+    'Jendouba': ['Jendouba', 'Béja', 'Tabarka', 'Ain Draham', 'Fernana'],
+    'Kairouan': ['Kairouan', 'Sousse', 'Sidi Bouzid', 'Haffouz', 'Alaa'],
+    'Kasserine': ['Kasserine', 'Sidi Bouzid', 'Feriana', 'Thala', 'Hassi El Ferid'],
+    'Kebili': ['Kebili', 'Douz', 'El Oued', 'Nefza', 'Tolga'],
+    'Kef': ['Le Kef', 'Kalaat Khasba', 'Jendouba', 'Sers', 'Nebeur'],
+    'Mahdia': ['Mahdia', 'Sousse', 'Monastir', 'Ksar Hellal', 'Ouled Chamekh'],
+    'Manouba': ['Manouba', 'La Manouba', 'Oued Ellil', 'Mornaguia', 'Borj El Amri'],
+    'Médenine': ['Médenine', 'Djerba', 'Zarzis', 'Ben Gardane', 'Tataouine'],
+    'Monastir': ['Monastir', 'Sousse', 'Mahdia', 'Ksar Hellal', 'Moknine'],
+    'Nabeul': ['Nabeul', 'Hammamet', 'Kelibia', 'Menzel Bourguiba', 'Bizerte'],
+    'Sfax': ['Sfax', 'Sakiet Eddaïer', 'El Hamma', 'Kerkennah', 'Menzel Chaker'],
+    'Sidi Bouzid': ['Sidi Bouzid', 'Kasserine', 'Sbeitla', 'Regueb', 'Menzel Bouzaiane'],
+    'Siliana': ['Siliana', 'Le Kef', 'Maktar', 'Bou Arada', 'El Aroussa'],
+    'Sousse': ['Sousse', 'Monastir', 'Mahdia', 'Hammam Sousse', 'Akouda'],
+    'Tataouine': ['Tataouine', 'Djerba', 'Médenine', 'Chenini', 'Tamezret'],
+    'Tozeur': ['Tozeur', 'Nefta', 'Gafsa', 'Tamerza', 'Midès'],
+    'Tunis': ['Tunis', 'Ariana', 'Ben Arous', 'La Marsa', 'Carthage'],
+    'Zaghouan': ['Zaghouan', 'Nabeul', 'Mateur', 'Bir Mchergua', 'El Fahs']
+  };
+
+  // Villes du gouvernorat sélectionné
+  villes: string[] = [];
+
+  // Liste des gouvernorats pour le template
+  get gouvernorats(): string[] {
+    return Object.keys(this.gouvernoratsVilles);
+  }
+
+  get subtotal(): number {
+    if (this.products().length === 0) return 0;
+    return this.products()[0].sellingPriceTTC * this.quantity();
+  }
+
+  get deliveryFee(): number {
+    return this._deliveryFee;
+  }
+
+  get total(): number {
+    return this.subtotal + this.deliveryFee;
+  }
+
+  constructor(
+    private productService: ProductService,
+    private cartService: CartService,
+    private router: Router,
+    private logService: LogService,
+    private fb: FormBuilder,
+    private orderService: OrderService,
+    private settingService: SettingService
+  ) {
     effect(() => {
       if (this.products().length === 1) {
         const p = this.products()[0];
@@ -1103,15 +1873,48 @@ export class ProductCatalogComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit() {
+    // Force muted sur la vidéo (certains navigateurs ignorent l'attribut HTML)
+    if (this.heroVideoRef?.nativeElement) {
+      const video = this.heroVideoRef.nativeElement;
+      video.muted = true;
+      video.play().catch(() => {});
+    }
+  }
+
   ngOnInit() {
+    this.checkoutForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      gouvernorat: ['', Validators.required],
+      ville: ['', Validators.required],
+      codePostal: ['', Validators.required],
+      address: ['', Validators.required],
+      phone: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
+      email: ['']
+    });
+
+    // Écouter les changements du gouvernorat pour mettre à jour les villes
+    this.checkoutForm.get('gouvernorat')?.valueChanges.subscribe((selectedGouvernorat) => {
+      this.villes = this.gouvernoratsVilles[selectedGouvernorat] || [];
+      this.checkoutForm.get('ville')?.setValue('');
+    });
+
     this.productService.getAll().subscribe({
       next: (res) => {
         const activeProducts = res.filter(p => p.active !== false);
         this.products.set(activeProducts);
+        this.pageLoading.set(false);
       },
       error: (err) => {
         console.error('Error loading products:', err);
+        this.pageLoading.set(false);
       }
+    });
+
+    this.settingService.getDeliveryFee().subscribe({
+      next: (fee) => this._deliveryFee = fee,
+      error: () => {} // garde la valeur par défaut (8)
     });
   }
 
@@ -1139,10 +1942,59 @@ export class ProductCatalogComponent implements OnInit {
     this.router.navigate(['/checkout']);
   }
 
+  isLoading = false;
+  submitError: string | null = null;
+  private _deliveryFee = 8;
+  pageLoading = signal(true);
+
+  @ViewChild('heroVideo') heroVideoRef!: ElementRef<HTMLVideoElement>;
+
+  onSubmit() {
+        if (this.checkoutForm.invalid) {
+            this.checkoutForm.markAllAsTouched();
+            return;
+        }
+
+        this.isLoading = true;
+        this.submitError = null;
+
+        const formVal = this.checkoutForm.value;
+        const fullAddress = [formVal.address, formVal.ville, formVal.gouvernorat, formVal.codePostal]
+            .filter(Boolean).join(', ');
+
+        const items: { [key: number]: number } = {};
+        if (this.products().length > 0) {
+            items[this.products()[0].id] = this.quantity();
+        }
+
+        const request: CheckoutRequest = {
+            firstName: formVal.firstName,
+            lastName: formVal.lastName,
+            address: fullAddress,
+            phone: formVal.phone,
+            email: formVal.email || undefined,
+            items
+        };
+
+        this.orderService.checkout(request).subscribe({
+            next: (order) => {
+                this.logService.log('CHECKOUT', 'Order placed successfully', { orderId: order.id });
+                this.cartService.clear();
+                this.router.navigate(['/order-success'], { state: { order } });
+            },
+            error: (err) => {
+                this.isLoading = false;
+                this.submitError = 'Une erreur est survenue. Veuillez réessayer.';
+                console.error('Checkout error:', err);
+                this.logService.log('ERROR', `Checkout failed: ${err.message}`, err);
+            }
+        });
+    }
+
   openLightbox(imageUrl: string) {
     const p = this.products()[0];
     if (!p?.imageUrls || p.imageUrls.length === 0) return;
-    
+
     this.currentImageIndex = p.imageUrls.indexOf(imageUrl);
     if (this.currentImageIndex === -1) {
       this.currentImageIndex = 0;
@@ -1161,11 +2013,11 @@ export class ProductCatalogComponent implements OnInit {
   navigateImage(direction: number) {
     const p = this.products()[0];
     if (!p?.imageUrls || p.imageUrls.length === 0) return;
-    
+
     let newIndex = this.currentImageIndex + direction;
     if (newIndex < 0) newIndex = p.imageUrls.length - 1;
     if (newIndex >= p.imageUrls.length) newIndex = 0;
-    
+
     this.currentImageIndex = newIndex;
     this.lightboxImage = p.imageUrls[newIndex];
     this.selectedImage = p.imageUrls[newIndex];

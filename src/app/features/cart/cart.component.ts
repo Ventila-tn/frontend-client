@@ -137,22 +137,7 @@ import { CartService } from '../../core/services/cart.service';
                                 </div>
 
                                 <!-- Trust Badges -->
-                                <div class="trust-badges">
-                                    <div class="trust-badge">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                                        </svg>
-                                        <span>Paiement sécurisé</span>
-                                    </div>
-                                    <div class="trust-badge">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="9" cy="21" r="1"></circle>
-                                            <circle cx="20" cy="21" r="1"></circle>
-                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                        </svg>
-                                        <span>Livraison gratuite</span>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
                     </div>

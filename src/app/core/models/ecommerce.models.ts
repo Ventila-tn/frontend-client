@@ -22,6 +22,8 @@ export interface CheckoutRequest {
     firstName: string;
     lastName: string;
     address: string;
+    city: string;
+    governorate: string;
     phone: string;
     email?: string;
     items: { [key: number]: number };
@@ -46,6 +48,8 @@ export interface Order {
     firstName: string;
     lastName: string;
     address: string;
+    city?: string;
+    governorate?: string;
     phone: string;
     email?: string;
     hasStockShortage: boolean;

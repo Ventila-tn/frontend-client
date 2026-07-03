@@ -752,11 +752,8 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
 
     .product__media-main {
       aspect-ratio: 1;
-      background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: 24px;
       overflow: hidden;
-      padding: 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      border-radius: 0;
     }
 
     .product__media-image {
@@ -1218,7 +1215,7 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
     .product__divider--wide {
       height: 1px;
       background: linear-gradient(to right, transparent, #e5e7eb 10%, #e5e7eb 90%, transparent);
-      margin: 3.5rem 0;
+      margin: 1.5rem 0;
     }
 
     /* Form Section */
@@ -1959,8 +1956,6 @@ export class ProductCatalogComponent implements OnInit, AfterViewInit {
         this.submitError = null;
 
         const formVal = this.checkoutForm.value;
-        const fullAddress = [formVal.address, formVal.ville, formVal.gouvernorat, formVal.codePostal]
-            .filter(Boolean).join(', ');
 
         const items: { [key: number]: number } = {};
         if (this.products().length > 0) {
@@ -1970,7 +1965,9 @@ export class ProductCatalogComponent implements OnInit, AfterViewInit {
         const request: CheckoutRequest = {
             firstName: formVal.firstName,
             lastName: formVal.lastName,
-            address: fullAddress,
+            address: formVal.address,
+            city: formVal.ville,
+            governorate: formVal.gouvernorat,
             phone: formVal.phone,
             email: formVal.email || undefined,
             items

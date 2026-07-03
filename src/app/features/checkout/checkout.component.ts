@@ -920,8 +920,6 @@ export class CheckoutComponent implements OnInit {
         this.submitError = null;
 
         const formVal = this.checkoutForm.value;
-        const fullAddress = [formVal.address, formVal.ville, formVal.gouvernorat, formVal.codePostal]
-            .filter(Boolean).join(', ');
 
         const items: { [key: number]: number } = {};
         for (const item of this.cart.items()) {
@@ -931,7 +929,9 @@ export class CheckoutComponent implements OnInit {
         const request: CheckoutRequest = {
             firstName: formVal.firstName,
             lastName: formVal.lastName,
-            address: fullAddress,
+            address: formVal.address,
+            city: formVal.ville,
+            governorate: formVal.gouvernorat,
             phone: formVal.phone,
             email: formVal.email || undefined,
             items

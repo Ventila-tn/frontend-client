@@ -27,6 +27,7 @@ export interface CheckoutRequest {
     phone: string;
     email?: string;
     items: { [key: number]: number };
+    deliveryFee?: number;
 }
 
 export interface OrderItem {

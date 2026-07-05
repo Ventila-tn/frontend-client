@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { LogService } from '../../core/services/log.service';
+import { SettingService } from '../../core/services/setting.service';
 import { CheckoutRequest } from '../../core/models/ecommerce.models';
 
 @Component({
@@ -213,11 +214,11 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                                 </div>
                                 <div class="summary-total">
                                     <span class="summary-total__label">Livraison</span>
-                                    <span class="summary-total__value">8.00 TND</span>
+                                    <span class="summary-total__value">{{ deliveryFee().toFixed(2) }} TND</span>
                                 </div>
                                 <div class="summary-total summary-total--final">
                                     <span class="summary-total__label">Total</span>
-                                    <span class="summary-total__value">{{ (cart.subtotal() + 8).toFixed(2) }} TND</span>
+                                    <span class="summary-total__value">{{ (cart.subtotal() + deliveryFee()).toFixed(2) }} TND</span>
                                 </div>
                             </div>
 
@@ -250,11 +251,14 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                         type="button"
                         (click)="onSubmit()"
                         class="btn btn--primary btn--large btn--full"
-                        [disabled]="isLoading"
+                        [disabled]="isLoading || !deliveryFeeLoaded()"
                     >
                         @if (isLoading) {
                             <span class="spinner"></span>
                             Traitement en cours...
+                        } @else if (!deliveryFeeLoaded()) {
+                            <span class="spinner"></span>
+                            Chargement des frais...
                         } @else {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -837,6 +841,8 @@ export class CheckoutComponent implements OnInit {
     checkoutForm!: FormGroup;
     isLoading = false;
     submitError: string | null = null;
+    deliveryFee = signal<number>(7); // valeur par défaut
+    deliveryFeeLoaded = signal<boolean>(false); // nouveau: suivi du chargement
 
     // Liste des gouvernorats tunisiens avec leurs villes
     gouvernoratsVilles: { [key: string]: string[] } = {
@@ -879,7 +885,8 @@ export class CheckoutComponent implements OnInit {
         public cart: CartService,
         private orderService: OrderService,
         private router: Router,
-        private logService: LogService
+        private logService: LogService,
+        private settingService: SettingService
     ) { }
 
     ngOnInit() {
@@ -903,6 +910,22 @@ export class CheckoutComponent implements OnInit {
         if (this.cart.items().length === 0) {
             this.router.navigate(['/']);
         }
+
+        // Charger le prix de livraison depuis l'API
+        console.log('🚚 Chargement des frais de livraison...');
+        this.settingService.getDeliveryFee().subscribe({
+            next: (fee) => {
+                console.log('✅ Frais de livraison reçus:', fee, typeof fee);
+                this.deliveryFee.set(fee);
+                this.deliveryFeeLoaded.set(true);
+            },
+            error: (err) => {
+                console.error('❌ Erreur lors du chargement des frais de livraison:', err);
+                console.log('🔄 Utilisation de la valeur par défaut: 7 TND');
+                this.deliveryFee.set(7); // fallback sur valeur par défaut
+                this.deliveryFeeLoaded.set(true);
+            }
+        });
     }
 
     updateQty(productId: number, qty: number) {
@@ -915,6 +938,30 @@ export class CheckoutComponent implements OnInit {
             this.checkoutForm.markAllAsTouched();
             return;
         }
+
+        // Vérifier que les frais de livraison sont bien chargés
+        if (!this.deliveryFeeLoaded()) {
+            console.warn('⚠️ Frais de livraison pas encore chargés, tentative de rechargement...');
+            this.settingService.getDeliveryFee().subscribe({
+                next: (fee) => {
+                    this.deliveryFee.set(fee);
+                    this.deliveryFeeLoaded.set(true);
+                    this.proceedWithSubmit();
+                },
+                error: () => {
+                    this.deliveryFee.set(7);
+                    this.deliveryFeeLoaded.set(true);
+                    this.proceedWithSubmit();
+                }
+            });
+            return;
+        }
+
+        this.proceedWithSubmit();
+    }
+
+    private proceedWithSubmit() {
+        console.log('🛒 Soumission commande - Frais de livraison actuels:', this.deliveryFee());
 
         this.isLoading = true;
         this.submitError = null;
@@ -934,11 +981,15 @@ export class CheckoutComponent implements OnInit {
             governorate: formVal.gouvernorat,
             phone: formVal.phone,
             email: formVal.email || undefined,
-            items
+            items,
+            deliveryFee: this.deliveryFee()
         };
+
+        console.log('📦 Requête checkout envoyée:', { ...request, deliveryFee: request.deliveryFee });
 
         this.orderService.checkout(request).subscribe({
             next: (order) => {
+                console.log('✅ Commande créée:', order);
                 this.logService.log('CHECKOUT', 'Order placed successfully', { orderId: order.id });
                 this.cart.clear();
                 this.router.navigate(['/order-success'], { state: { order } });

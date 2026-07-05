@@ -251,7 +251,7 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                         type="button"
                         (click)="onSubmit()"
                         class="btn btn--primary btn--large btn--full"
-                        [disabled]="isLoading || !deliveryFeeLoaded()"
+                        [disabled]="isLoading || !deliveryFeeLoaded() || checkoutForm.invalid"
                     >
                         @if (isLoading) {
                             <span class="spinner"></span>

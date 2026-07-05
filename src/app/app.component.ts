@@ -15,7 +15,7 @@ import { LogService } from './core/services/log.service';
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer no-print">
       <div class="footer__inner">
         <div class="footer__simple">
           <div class="footer__logo">
@@ -188,7 +188,8 @@ import { LogService } from './core/services/log.service';
 
     /* Main Content */
     .main-content {
-      min-height: calc(100vh - 400px);
+      min-height: calc(100vh - 200px);
+      overflow-x: hidden; /* Évite le scroll horizontal sur mobile */
     }
 
     /* Footer */
@@ -299,6 +300,13 @@ import { LogService } from './core/services/log.service';
         width: 100%;
         max-width: 300px;
         justify-content: center;
+      }
+    }
+
+    /* Masquer éléments à l'impression */
+    @media print {
+      .no-print {
+        display: none !important;
       }
     }
   `]

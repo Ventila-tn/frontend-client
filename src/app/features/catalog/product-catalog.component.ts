@@ -153,6 +153,7 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
                                   formControlName="firstName" 
                                   class="field__input"
                                   placeholder="Votre prénom"
+                                  autocomplete="given-name"
                                 >
                                 @if (checkoutForm.get('firstName')?.invalid && (checkoutForm.get('firstName')?.dirty || checkoutForm.get('firstName')?.touched)) {
                                   <p class="field__error">Prénom requis</p>
@@ -1537,6 +1538,12 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
       /* Hero */
       .collection__hero {
         height: 320px;
+      }
+
+      /* Empêcher le zoom automatique sur les inputs sur mobile */
+      .field__input {
+        font-size: 16px !important; /* Empêche le zoom sur iOS */
+        transform: translateZ(0); /* Force l'accélération hardware */
       }
 
       /* Lightbox close button - bigger and more visible on mobile */

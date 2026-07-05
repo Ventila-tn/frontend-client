@@ -335,7 +335,7 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
                             type="button"
                             (click)="onSubmit()"
                             class="btn btn--primary btn--large btn--full"
-                            [disabled]="isLoading"
+                            [disabled]="isLoading || checkoutForm.invalid"
                         >
                             @if (isLoading) {
                                 <span class="spinner"></span>
@@ -1131,23 +1131,31 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
     }
 
     .lightbox__close {
-      position: absolute;
-      top: -3rem;
-      right: 0;
-      width: 44px;
-      height: 44px;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      width: 48px;
+      height: 48px;
       border: none;
-      background: none;
+      background: rgba(239, 68, 68, 0.9);
       color: white;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity var(--transition-base);
+      transition: all var(--transition-base);
+      z-index: 1001;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .lightbox__close:hover {
-      opacity: 0.7;
+      background: rgba(239, 68, 68, 1);
+      transform: scale(1.1);
+    }
+
+    .lightbox__close:active {
+      transform: scale(0.95);
     }
 
     .lightbox__navigation {
@@ -1529,6 +1537,19 @@ import { Product, CheckoutRequest } from '../../core/models/ecommerce.models';
       /* Hero */
       .collection__hero {
         height: 320px;
+      }
+
+      /* Lightbox close button - bigger and more visible on mobile */
+      .lightbox__close {
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 56px;
+        height: 56px;
+      }
+
+      .lightbox__close svg {
+        width: 28px;
+        height: 28px;
       }
 
       /* Product page top padding */

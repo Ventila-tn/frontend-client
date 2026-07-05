@@ -170,6 +170,14 @@ import { Product } from '../../core/models/ecommerce.models';
       @if (isLightboxOpen) {
         <div class="lightbox" (click)="closeLightbox()">
           <div class="lightbox__content" (click)="$event.stopPropagation()">
+            <div class="lightbox__top-bar">
+              <button class="lightbox__close-top" (click)="$event.stopPropagation(); closeLightbox()" aria-label="Fermer">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
             <div class="lightbox__navigation">
               @if (hasPreviousImage()) {
                 <button class="lightbox__nav-button lightbox__nav-button--prev" (click)="navigateImage(-1)" aria-label="Image précédente">
@@ -182,12 +190,6 @@ import { Product } from '../../core/models/ecommerce.models';
               <div class="lightbox__image-wrapper">
                 <div class="lightbox__image-container">
                   <img [src]="lightboxImage" [alt]="p.name" class="lightbox__image">
-                  <button class="lightbox__close" (click)="$event.stopPropagation(); closeLightbox()" aria-label="Fermer">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -598,6 +600,41 @@ import { Product } from '../../core/models/ecommerce.models';
       width: 90vw;
       max-width: 1200px;
       height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lightbox__top-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.75rem 0.25rem 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1030;
+    }
+
+    .lightbox__close-top {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    .lightbox__close-top:hover,
+    .lightbox__close-top:active {
+      background: rgba(244, 63, 94, 0.95);
+      transform: scale(1.1);
     }
 
     .lightbox__image-wrapper {
@@ -607,36 +644,12 @@ import { Product } from '../../core/models/ecommerce.models';
       align-items: center;
       justify-content: center;
       max-height: 100%;
+      margin-top: 70px;
     }
 
     .lightbox__image-container {
       position: relative;
       display: inline-block;
-    }
-
-    .lightbox__close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(6px);
-      color: white;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1020;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .lightbox__close:hover {
-      background: rgba(244, 63, 94, 0.85);
-      transform: scale(1.08);
     }
 
     .lightbox__navigation {
@@ -759,6 +772,20 @@ import { Product } from '../../core/models/ecommerce.models';
         justify-content: space-between !important;
         align-items: center !important;
         flex-direction: row !important;
+      }
+
+      /* Mobile lightbox styles */
+      .lightbox__close-top {
+        width: 64px !important;
+        height: 64px !important;
+      }
+
+      .lightbox__top-bar {
+        padding: 1rem 0.5rem 0 !important;
+      }
+
+      .lightbox__image-wrapper {
+        margin-top: 80px !important;
       }
     }
 

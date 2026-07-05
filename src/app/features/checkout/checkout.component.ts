@@ -251,22 +251,19 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                         type="button"
                         (click)="onSubmit()"
                         class="btn btn--primary btn--large btn--full"
-                        [ngClass]="{'btn--disabled': !checkoutForm.valid || !deliveryFeeLoaded() || isLoading}"
-                        [disabled]="isLoading || !deliveryFeeLoaded() || checkoutForm.invalid"
+                        [ngClass]="{'btn--disabled': !isFormValid() || isLoading}"
+                        [disabled]="!isFormValid() || isLoading"
                     >
                         @if (isLoading) {
                             <span class="spinner"></span>
                             Traitement en cours...
-                        } @else if (!deliveryFeeLoaded()) {
-                            <span class="spinner"></span>
-                            Chargement des frais...
-                        } @else if (checkoutForm.invalid) {
-                            <span>Remplissez les champs obligatoires</span>
+                        } @else if (!isFormValid()) {
+                            <span>Remplissez tous les champs obligatoires</span>
                         } @else {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
-                            Confirmer la commande
+                            Valider ma commande
                         }
                     </button>
                     <p class="checkout-cta__hint">En cliquant, vous acceptez nos conditions de vente.</p>
@@ -461,12 +458,24 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
 
         .checkout-cta .btn--primary:disabled,
         .btn.btn--primary:disabled {
-            background: #d1d5db !important;
-            color: #6b7280 !important;
+            background: #9ca3af !important;
+            color: #4b5563 !important;
             cursor: not-allowed !important;
             box-shadow: none !important;
             transform: none !important;
-            pointer-events: none !important;
+            pointer-events: auto !important;
+            opacity: 0.7 !important;
+        }
+
+        .checkout-cta .btn--disabled,
+        .btn.btn--disabled {
+            background: #9ca3af !important;
+            color: #4b5563 !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+            pointer-events: auto !important;
+            opacity: 0.7 !important;
         }
 
         .btn--large {
@@ -850,7 +859,8 @@ export class CheckoutComponent implements OnInit {
     isLoading = false;
     submitError: string | null = null;
     deliveryFee = signal<number>(7); // valeur par défaut
-    deliveryFeeLoaded = signal<boolean>(false); // nouveau: suivi du chargement
+    deliveryFeeLoaded = signal<boolean>(true); // DEJA CHARGE DEBUT AVEC VALEUR PAR DEFAUT
+    isFormValid = signal<boolean>(false); // pour bouton grisé
 
     // Liste des gouvernorats tunisiens avec leurs villes
     gouvernoratsVilles: { [key: string]: string[] } = {
@@ -908,6 +918,13 @@ export class CheckoutComponent implements OnInit {
             phone: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
             email: ['']
         });
+
+        // Écouter les changements de validité du formulaire
+        this.checkoutForm.statusChanges.subscribe(() => {
+            this.isFormValid.set(this.checkoutForm.valid);
+        });
+        // Valeur initiale
+        this.isFormValid.set(this.checkoutForm.valid);
 
         // Écouter les changements du gouvernorat pour mettre à jour les villes
         this.checkoutForm.get('gouvernorat')?.valueChanges.subscribe((selectedGouvernorat) => {

@@ -171,32 +171,31 @@ button {
 }
 
 .btn--primary:disabled {
-    background-color: #d1d5db !important;
-    color: #6b7280 !important;
+    background: #9ca3af !important;
+    color: #4b5563 !important;
+    opacity: 0.7 !important;
     cursor: not-allowed !important;
     transform: none !important;
     box-shadow: none !important;
-    pointer-events: none !important;
 }
 
 .btn--disabled {
-    background-color: #9ca3af !important;
+    background: #9ca3af !important;
     color: #4b5563 !important;
+    opacity: 0.7 !important;
     cursor: not-allowed !important;
     transform: none !important;
     box-shadow: none !important;
-    pointer-events: auto !important;
-    opacity: 0.7 !important;
 }
 
 .btn:disabled,
 button:disabled {
-    background-color: #9ca3af !important;
+    background: #9ca3af !important;
     color: #4b5563 !important;
+    opacity: 0.7 !important;
     cursor: not-allowed !important;
     transform: none !important;
     box-shadow: none !important;
-    opacity: 0.7 !important;
 }
 
 .btn--secondary {

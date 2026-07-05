@@ -107,7 +107,7 @@ export class StatusLabelPipe implements PipeTransform {
 
         <!-- Footer pour PDF uniquement -->
         <div class="pdf-footer">
-          <p>Merci de votre confiance !</p>
+          <p>Support : support&#64;ventila.tn</p>
         </div>
       </div>
 

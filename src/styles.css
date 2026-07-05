@@ -170,6 +170,15 @@ button {
     box-shadow: var(--shadow-md);
 }
 
+.btn--primary:disabled {
+    background-color: #d1d5db !important;
+    color: #6b7280 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
+}
+
 .btn--secondary {
     background-color: transparent;
     color: var(--color-base-text);

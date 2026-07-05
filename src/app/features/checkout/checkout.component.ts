@@ -456,13 +456,14 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
             box-shadow: var(--shadow-md);
         }
 
-        .btn--primary:disabled {
-            background: var(--color-gray-300) !important;
-            color: var(--color-gray-500) !important;
-            opacity: 1;
-            cursor: not-allowed;
+        .checkout-cta .btn--primary:disabled,
+        .btn.btn--primary:disabled {
+            background: #d1d5db !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
             box-shadow: none !important;
             transform: none !important;
+            pointer-events: none !important;
         }
 
         .btn--large {

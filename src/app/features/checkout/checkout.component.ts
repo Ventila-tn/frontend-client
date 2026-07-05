@@ -457,8 +457,12 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
         }
 
         .btn--primary:disabled {
-            opacity: 0.5;
+            background: var(--color-gray-300) !important;
+            color: var(--color-gray-500) !important;
+            opacity: 1;
             cursor: not-allowed;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
         .btn--large {

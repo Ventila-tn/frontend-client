@@ -24,8 +24,14 @@ export class StatusLabelPipe implements PipeTransform {
     imports: [CommonModule, StatusLabelPipe],
     template: `
     <div class="page">
+      <!-- Logo et titre pour le PDF uniquement -->
+      <div class="pdf-header">
+        <h1 class="pdf-company-name">Ventila.tn</h1>
+        <p class="pdf-subtitle">Confirmation de commande</p>
+      </div>
+
       <!-- Bouton retour accueil -->
-      <button class="back-btn" (click)="goHome()">
+      <button class="back-btn no-print" (click)="goHome()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
@@ -43,6 +49,16 @@ export class StatusLabelPipe implements PipeTransform {
           <h1>Commande confirmée</h1>
           <div class="reference-badge">Réf. {{ order.reference }}</div>
           <p class="thank-you">Merci {{ order.firstName }} {{ order.lastName }}, votre commande a bien été reçue.</p>
+          
+          <!-- Bouton télécharger PDF -->
+          <button class="download-pdf-btn no-print" (click)="downloadPDF()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Télécharger en PDF
+          </button>
         </div>
 
         <!-- Résumé livraison + articles -->
@@ -53,6 +69,8 @@ export class StatusLabelPipe implements PipeTransform {
             <div class="info-row"><span>Référence</span><span class="ref-value">{{ order.reference }}</span></div>
             <div class="info-row"><span>Nom</span><span>{{ order.firstName }} {{ order.lastName }}</span></div>
             <div class="info-row"><span>Adresse</span><span>{{ order.address }}</span></div>
+            <div class="info-row" *ngIf="order.city"><span>Ville</span><span>{{ order.city }}</span></div>
+            <div class="info-row" *ngIf="order.governorate"><span>Gouvernorat</span><span>{{ order.governorate }}</span></div>
             <div class="info-row"><span>Téléphone</span><span>{{ order.phone }}</span></div>
             <div class="info-row" *ngIf="order.email"><span>Email</span><span>{{ order.email }}</span></div>
           </div>
@@ -85,6 +103,11 @@ export class StatusLabelPipe implements PipeTransform {
               <strong>{{ order.totalAmount | number:'1.2-2' }} TND</strong>
             </div>
           </div>
+        </div>
+
+        <!-- Footer pour PDF uniquement -->
+        <div class="pdf-footer">
+          <p>Merci de votre confiance !</p>
         </div>
       </div>
 
@@ -304,6 +327,145 @@ export class StatusLabelPipe implements PipeTransform {
       font-size: 14px;
       cursor: pointer;
     }
+
+    .download-pdf-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a3a8f;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(26, 58, 143, 0.2);
+    }
+
+    .download-pdf-btn:hover {
+      background: #2451b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 58, 143, 0.3);
+    }
+
+    .download-pdf-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+      .download-pdf-btn {
+        width: 100%;
+        max-width: 320px;
+        justify-content: center;
+      }
+    }
+
+    /* En-tête et pied de page PDF - cachés à l'écran */
+    .pdf-header,
+    .pdf-footer {
+      display: none;
+    }
+
+    /* Styles d'impression pour PDF */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      .page {
+        background: white;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 100%;
+      }
+
+      /* Afficher l'en-tête PDF */
+      .pdf-header {
+        display: block;
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #1a3a8f;
+      }
+
+      .pdf-company-name {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1a3a8f;
+        margin: 0 0 8px;
+        letter-spacing: -0.02em;
+      }
+
+      .pdf-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin: 0;
+      }
+
+      /* Afficher le pied de page PDF */
+      .pdf-footer {
+        display: block;
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .pdf-footer p {
+        margin: 4px 0;
+      }
+
+      .pdf-contact {
+        font-weight: 600;
+        color: #1a3a8f;
+      }
+
+      .success-header {
+        margin-bottom: 30px;
+        page-break-after: avoid;
+      }
+
+      .check-icon {
+        width: 60px;
+        height: 60px;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .reference-badge {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .summary-grid {
+        display: block;
+      }
+
+      .card {
+        margin-bottom: 20px;
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #e0e0e0;
+      }
+
+      .item-img {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      /* Titre du document */
+      @page {
+        margin: 1.5cm;
+      }
+    }
   `]
 })
 export class OrderSuccessComponent implements OnInit {
@@ -325,5 +487,11 @@ export class OrderSuccessComponent implements OnInit {
 
     goHome() {
         this.router.navigate(['/']);
+    }
+
+    downloadPDF() {
+        // Utiliser l'API d'impression du navigateur
+        // Sur mobile et desktop, cela permet de sauvegarder en PDF
+        window.print();
     }
 }

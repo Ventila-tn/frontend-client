@@ -598,6 +598,18 @@ import { Product } from '../../core/models/ecommerce.models';
       justify-content: center;
       z-index: 1000;
       animation: fadeIn 0.2s ease-out;
+      padding: 2rem;
+    }
+
+    .lightbox::before {
+      content: "Cliquez ici pour fermer";
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.875rem;
+      pointer-events: none;
     }
 
     .lightbox__content {

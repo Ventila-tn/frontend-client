@@ -251,6 +251,7 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                         type="button"
                         (click)="onSubmit()"
                         class="btn btn--primary btn--large btn--full"
+                        [ngClass]="{'btn--disabled': !checkoutForm.valid || !deliveryFeeLoaded() || isLoading}"
                         [disabled]="isLoading || !deliveryFeeLoaded() || checkoutForm.invalid"
                     >
                         @if (isLoading) {
@@ -259,6 +260,8 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                         } @else if (!deliveryFeeLoaded()) {
                             <span class="spinner"></span>
                             Chargement des frais...
+                        } @else if (checkoutForm.invalid) {
+                            <span>Remplissez les champs obligatoires</span>
                         } @else {
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>

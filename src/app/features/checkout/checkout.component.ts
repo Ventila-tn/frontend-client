@@ -250,8 +250,13 @@ import { CheckoutRequest } from '../../core/models/ecommerce.models';
                     <button 
                         type="button"
                         (click)="onSubmit()"
-                        class="btn btn--primary btn--large btn--full"
-                        [ngClass]="{'btn--disabled': !isFormValid() || isLoading}"
+                        class="btn btn--large btn--full"
+                        [ngClass]="{'btn--primary': isFormValid() && !isLoading, 'btn--disabled': !isFormValid() || isLoading}"
+                        [style.background-color]="isFormValid() && !isLoading ? '#111111' : '#9ca3af'"
+                        [style.color]="isFormValid() && !isLoading ? '#ffffff' : '#4b5563'"
+                        [style.opacity]="isFormValid() && !isLoading ? '1' : '0.7'"
+                        [style.cursor]="isFormValid() && !isLoading ? 'pointer' : 'not-allowed'"
+                        [style.pointer-events]="isFormValid() && !isLoading ? 'auto' : 'none'"
                         [disabled]="!isFormValid() || isLoading"
                     >
                         @if (isLoading) {

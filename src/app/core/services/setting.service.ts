@@ -10,6 +10,7 @@ export class SettingService {
     constructor(private http: HttpClient) {}
 
     getDeliveryFee(): Observable<number> {
+        console.log('🌐 Appel API:', `${this.apiUrl}/delivery-fee`);
         return this.http.get<number>(`${this.apiUrl}/delivery-fee`);
     }
 }

@@ -170,13 +170,6 @@ import { Product } from '../../core/models/ecommerce.models';
       @if (isLightboxOpen) {
         <div class="lightbox" (click)="closeLightbox()">
           <div class="lightbox__content" (click)="$event.stopPropagation()">
-            <button class="lightbox__close" (click)="closeLightbox()" aria-label="Fermer">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-
             <div class="lightbox__navigation">
               @if (hasPreviousImage()) {
                 <button class="lightbox__nav-button lightbox__nav-button--prev" (click)="navigateImage(-1)" aria-label="Image précédente">
@@ -187,7 +180,15 @@ import { Product } from '../../core/models/ecommerce.models';
               }
 
               <div class="lightbox__image-wrapper">
-                <img [src]="lightboxImage" [alt]="p.name" class="lightbox__image">
+                <div class="lightbox__image-container">
+                  <img [src]="lightboxImage" [alt]="p.name" class="lightbox__image">
+                  <button class="lightbox__close" (click)="$event.stopPropagation(); closeLightbox()" aria-label="Fermer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               @if (hasNextImage()) {
@@ -554,10 +555,11 @@ import { Product } from '../../core/models/ecommerce.models';
     }
 
     .product-specs__row {
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 0.75rem;
-      padding: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
     }
 
     .product-specs__row:not(:last-child) {
@@ -565,16 +567,18 @@ import { Product } from '../../core/models/ecommerce.models';
     }
 
     .product-specs__label {
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
       color: #6b7280;
-      font-weight: 500;
+      font-weight: 600;
+      flex-shrink: 0;
     }
 
     .product-specs__value {
-      font-size: 0.8125rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 700;
       color: #111827;
       text-align: right;
+      flex: 1;
     }
 
     /* Lightbox */
@@ -596,24 +600,43 @@ import { Product } from '../../core/models/ecommerce.models';
       height: 90vh;
     }
 
+    .lightbox__image-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 100%;
+    }
+
+    .lightbox__image-container {
+      position: relative;
+      display: inline-block;
+    }
+
     .lightbox__close {
       position: absolute;
-      top: -2.5rem;
-      right: 0;
-      width: 40px;
-      height: 40px;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
       border: none;
-      background: none;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(6px);
       color: white;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.2s ease;
+      z-index: 1020;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
 
     .lightbox__close:hover {
-      opacity: 0.7;
+      background: rgba(244, 63, 94, 0.85);
+      transform: scale(1.08);
     }
 
     .lightbox__navigation {
@@ -643,15 +666,8 @@ import { Product } from '../../core/models/ecommerce.models';
       background: rgba(255, 255, 255, 0.2);
     }
 
-    .lightbox__image-wrapper {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      max-height: 100%;
-    }
-
     .lightbox__image {
+      display: block;
       max-width: 100%;
       max-height: 85vh;
       object-fit: contain;
@@ -680,6 +696,13 @@ import { Product } from '../../core/models/ecommerce.models';
 
       .product__media {
         position: static;
+      }
+
+      .product-specs__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: row;
       }
     }
 
@@ -729,6 +752,13 @@ import { Product } from '../../core/models/ecommerce.models';
 
       .btn--primary {
         width: 100%;
+      }
+
+      .product-specs__row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-direction: row !important;
       }
     }
 
@@ -792,7 +822,7 @@ export class ProductDetailComponent implements OnInit {
   openLightbox(imageUrl: string) {
     const p = this.product();
     if (!p?.imageUrls || p.imageUrls.length === 0) return;
-    
+
     this.currentImageIndex = p.imageUrls.indexOf(imageUrl);
     if (this.currentImageIndex === -1) {
       this.currentImageIndex = 0;
@@ -811,11 +841,11 @@ export class ProductDetailComponent implements OnInit {
   navigateImage(direction: number) {
     const p = this.product();
     if (!p?.imageUrls || p.imageUrls.length === 0) return;
-    
+
     let newIndex = this.currentImageIndex + direction;
     if (newIndex < 0) newIndex = p.imageUrls.length - 1;
     if (newIndex >= p.imageUrls.length) newIndex = 0;
-    
+
     this.currentImageIndex = newIndex;
     this.lightboxImage = p.imageUrls[newIndex];
     this.selectedImage = p.imageUrls[newIndex];
